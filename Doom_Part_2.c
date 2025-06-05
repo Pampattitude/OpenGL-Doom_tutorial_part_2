@@ -216,7 +216,7 @@ void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int w,
   // wall texture
   int wt = W[w].wt;
   // horizontal wall texture starting and step value
-  float ht = 0, ht_step = (float)(Textures[wt].w*W[w].u) / (float)(x2 - x1);
+  float ht = 0, ht_step = (float)(Textures[wt].w * W[w].u) / (float)(x2 - x1);
 
   // Hold difference in distance
   int dyb = b2 - b1; // y distance of bottom line
@@ -228,7 +228,7 @@ void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int w,
   int xs = x1; // hold initial x1 starting position
   // CLIP X
   if (x1 < 0) {
-    ht-=ht_step*x1;
+    ht -= ht_step * x1;
     x1 = 0;
   } // clip left
   if (x2 < 0) {
@@ -247,11 +247,11 @@ void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int w,
     int y2 = dyt * (x - xs + 0.5) / dx + t1; // y bottom point
 
     // vertical wall texture starting and step value
-    float vt = 0, vt_step = (float)(Textures[wt].h*W[w].v) / (float)(y2 - y1);
+    float vt = 0, vt_step = (float)(Textures[wt].h * W[w].v) / (float)(y2 - y1);
 
     // Clip Y
     if (y1 < 0) {
-    vt-=vt_step*y1;
+      vt -= vt_step * y1;
       y1 = 0;
     } // clip y
     if (y2 < 0) {
@@ -272,27 +272,90 @@ void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int w,
         S[s].surf[x] = y2;
       } // top surface save top row
       for (y = y1; y < y2; y++) { // normal wall
-        int pixel = (int)(Textures[wt].h - ((int)vt%Textures[wt].h) - 1) * 3 * Textures[wt].w + ((int)ht%Textures[wt].w) * 3;
-        int r = Textures[wt].name[pixel + 0]-W[w].shade/2; if (r<0) {r=0;}
-        int g = Textures[wt].name[pixel + 1]-W[w].shade/2; if (g<0) {g=0;}
-        int b = Textures[wt].name[pixel + 2]-W[w].shade/2; if (b<0) {b=0;}
+        int pixel = (int)(Textures[wt].h - ((int)vt % Textures[wt].h) - 1) * 3 *
+                        Textures[wt].w +
+                    ((int)ht % Textures[wt].w) * 3;
+        int r = Textures[wt].name[pixel + 0] - W[w].shade / 2;
+        if (r < 0) {
+          r = 0;
+        }
+        int g = Textures[wt].name[pixel + 1] - W[w].shade / 2;
+        if (g < 0) {
+          g = 0;
+        }
+        int b = Textures[wt].name[pixel + 2] - W[w].shade / 2;
+        if (b < 0) {
+          b = 0;
+        }
         drawPixel(x, y, r, g, b);
         vt += vt_step;
       }
-     ht += ht_step;
+      ht += ht_step;
     }
-    
+
     // draw back wall and surface
     if (frontBack == 1) {
-      if (S[s].surface == 1) {
+      int xo = SW / 2;          // x offset
+      int yo = SH / 2;          // y offset
+      float fov = 200.f;        // field of view
+      int x2 = x - xo;          // x - x offset
+      int wo;                   // wall offset
+      float tile = S[s].ss * 7; // imported surface tile
+
+      if (S[s].surface == 1) { // bottom surface
         y2 = S[s].surf[x];
+        wo = S[s].z1;
       }
-      if (S[s].surface == 2) {
+      if (S[s].surface == 2) { // top surface
         y1 = S[s].surf[x];
+        wo = S[s].z2;
       }
-      for (y = y1; y < y2; y++) {
-        drawPixel(x, y, 255, 0, 0);
-      } // normal wall
+
+      float lookUpDown = -P.l * 6.2f;
+      if (lookUpDown > SH) {
+        lookUpDown = SH;
+      }
+      float moveUpDown = (float)(P.z - wo) / (float)yo;
+      if (moveUpDown == 0) {
+        moveUpDown = 0.001f;
+      }
+      int ys = y1 - yo, ye = y2 - yo; // y start and y end
+
+      for (y = ys; y < ye; y++) {
+        float z = y + lookUpDown;
+        if (z == 0) {
+          z = 0.0001f;
+        } // prevent divide by zero
+        float fx = x2 / z * moveUpDown * tile;  // world floor x
+        float fy = fov / z * moveUpDown * tile; // world floor y
+        float rx = fx * M.sin[P.a] - fy * M.cos[P.a] +
+                   (P.y / 60.f * tile); // rotated texture x
+        float ry = fx * M.cos[P.a] + fy * M.sin[P.a] -
+                   (P.x / 60.f * tile); // rotated texture y
+        if (rx < 0) {
+          rx = -rx + 1;
+        } // remove negative values
+        if (ry < 0) {
+          ry = -ry + 1;
+        } // remove negative values
+        int st = S[s].st; // surface texture
+        int pixel = (int)(Textures[st].h - ((int)ry % Textures[st].h) - 1) * 3 *
+                        Textures[st].w +
+                    ((int)rx % Textures[st].w) * 3;
+        int r = Textures[st].name[pixel + 0];
+        if (r < 0) {
+          r = 0;
+        }
+        int g = Textures[st].name[pixel + 1];
+        if (g < 0) {
+          g = 0;
+        }
+        int b = Textures[st].name[pixel + 2];
+        if (b < 0) {
+          b = 0;
+        }
+        drawPixel(x2 + xo, y + yo, r, g, b);
+      }
     }
   }
 }
@@ -399,6 +462,55 @@ void draw3D() {
         drawWall(wx[0], wx[1], wy[0], wy[1], wy[2], wy[3], s, w, frontBack);
       }
       S[s].d /= (S[s].we - S[s].ws); // find average sector distance
+    }
+  }
+}
+
+void floors() {
+  int x, y;
+  int xo = SW / 2;   // x offset
+  int yo = SH / 2;   // y offset
+  float fov = 200.f; // field of view
+  float lookUpDown = -P.l * 4.f;
+  if (lookUpDown > SH) {
+    lookUpDown = SH;
+  }
+  float moveUpDown = P.z / 16.f;
+  if (moveUpDown == 0) {
+    moveUpDown = 0.001f;
+  }
+  int ys = -yo, ye = -lookUpDown;
+  if (moveUpDown < 0) {
+    ys = -lookUpDown;
+    ye = yo + lookUpDown;
+  }
+
+  for (y = ys; y < ye; y++) {
+    for (x = -xo; x < xo; x++) {
+      float z = y + lookUpDown;
+      if (z == 0) {
+        z = 0.0001f;
+      } // prevent divide by zero
+      float fx = x / z * moveUpDown;   // world floor x
+      float fy = fov / z * moveUpDown; // world floor y
+      float rx =
+          fx * M.sin[P.a] - fy * M.cos[P.a] + (P.y / 30.f); // rotated texture x
+      float ry =
+          fx * M.cos[P.a] + fy * M.sin[P.a] - (P.x / 30.f); // rotated texture y
+      if (rx < 0) {
+        rx = -rx + 1;
+      } // remove negative values
+      if (ry < 0) {
+        ry = -ry + 1;
+      } // remove negative values
+      if (rx <= 0 || ry <= 0 || rx >= 5 || ry >= 5) { // only draw small squares
+        continue;
+      }
+      if ((int)rx % 2 == (int)ry % 2) {
+        drawPixel(x + xo, y + yo, 255, 0, 0);
+      } else {
+        drawPixel(x + xo, y + yo, 0, 255, 0);
+      }
     }
   }
 }
