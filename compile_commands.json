@@ -1,0 +1,30 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-D_REENTRANT",
+      "-I/usr/include/SDL2",
+      "-o",
+      "Doom_Part_1",
+      "Doom_Part_1.c"
+    ],
+    "directory": "/mnt/e/Documents/GitHub/OpenGL-Doom_tutorial_part_2",
+    "file": "/mnt/e/Documents/GitHub/OpenGL-Doom_tutorial_part_2/Doom_Part_1.c",
+    "output": "/mnt/e/Documents/GitHub/OpenGL-Doom_tutorial_part_2/Doom_Part_1"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-D_REENTRANT",
+      "-I/usr/include/SDL2",
+      "-o",
+      "Doom_Part_2",
+      "Doom_Part_2.c"
+    ],
+    "directory": "/mnt/e/Documents/GitHub/OpenGL-Doom_tutorial_part_2",
+    "file": "/mnt/e/Documents/GitHub/OpenGL-Doom_tutorial_part_2/Doom_Part_2.c",
+    "output": "/mnt/e/Documents/GitHub/OpenGL-Doom_tutorial_part_2/Doom_Part_2"
+  }
+]
